@@ -1,0 +1,2 @@
+Info (10281): Verilog HDL Declaration information at Project2.v(6): object "LEDG" differs only in case from object "ledg" in the same scope
+Info (10281): Verilog HDL Declaration information at Project2.v(5): object "LEDR" differs only in case from object "ledr" in the same scope
