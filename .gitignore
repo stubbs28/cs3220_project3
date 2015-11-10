@@ -2,6 +2,10 @@ db/
 greybox_tmp/
 incremental_db/
 output_files/
+.DS_Store
 simulation
+Debug.*
 *.swp
 *.bak
+*.mif_update.rpt
+*.qws
