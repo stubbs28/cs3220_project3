@@ -24,12 +24,9 @@ module Project2(SW,KEY,LEDR,LEDG,HEX0,HEX1,HEX2,HEX3,CLOCK_50);
   parameter IMEM_DATA_BIT_WIDTH 		 = INST_BIT_WIDTH;
   parameter TRUE_DMEM_ADDR_BIT_WIDTH = 11;
   parameter DMEM_ADDR_BIT_WIDTH      = INST_BIT_WIDTH - 2;
-  parameter DMEM_CONTROL_BIT_WIDTH	 = 1;
   parameter DMEM_DATA_BIT_WIDTH      = INST_BIT_WIDTH;
   parameter IMEM_PC_BITS_HI     		 = IMEM_ADDR_BIT_WIDTH + 2;
   parameter IMEM_PC_BITS_LO     		 = 2;
-  parameter Mux3to1_CONTROL_BIT_WIDTH = 2;
-  parameter dprf_CONTROL_BIT_WIDTH 	 = 1;
   
   //PLL, clock genration, and reset generation
   wire clk, lock;
@@ -38,14 +35,12 @@ module Project2(SW,KEY,LEDR,LEDG,HEX0,HEX1,HEX2,HEX3,CLOCK_50);
 
   // Wires..
   wire pcWrtEn = 1'b1;
-  wire [3:0] dr_M;
-  wire memtoReg, memWrite, branch, jal, alusrc, regWrite, regWrite_M, memWrite_M;
+  wire memtoReg, memWrite, branch, jal, alusrc, regWrite;
   wire [7:0] aluControl, ledg;
   wire [9:0] ledr;
   wire [15:0] hex;
-  wire [1:0] sel_M;
   wire [IMEM_DATA_BIT_WIDTH - 1 : 0] instWord;
-  wire [DBITS - 1 : 0] incrementedPC_M, pcIn, pcOut, incrementedPC, pcAdderOut, aluOut, signExtImm, dataMuxOut, sr1Out, sr2Out, aluMuxOut, memDataOut, aluOut_M, sr2Out_M;
+  wire [DBITS - 1 : 0] pcIn, pcOut, incrementedPC, pcAdderOut, aluOut, signExtImm, dataMuxOut, sr1Out, sr2Out, aluMuxOut, memDataOut;
   
   // Create PCMUX
   Mux3to1 #(DBITS) pcMux (
@@ -101,16 +96,13 @@ module Project2(SW,KEY,LEDR,LEDG,HEX0,HEX1,HEX2,HEX3,CLOCK_50);
     .dIn2(signExtImm),
     .dOut(pcAdderOut)
   );
-  
-  Register #(dprf_CONTROL_BIT_WIDTH) dprf_CONTROL_reg(clk, reset, clk, regWrite, regWrite_M);
-  Register #(REG_INDEX_BIT_WIDTH) dprf_DR_reg(clk, reset, instWord[31:28], dr_M);
 
   // Create Dual Ported Register File
   RegisterFile #(DBITS, REG_INDEX_BIT_WIDTH) dprf (
     .clk(clk),
-    .wrtEn(regWrite_M),
+    .wrtEn(regWrite),
     .dIn(dataMuxOut),
-    .dr(dr_M),
+    .dr(instWord[31:28]),
     .sr1(memWrite | branch ? instWord[31:28] : instWord[27:24]),
     .sr2(memWrite | branch ? instWord[27:24] : instWord[23:20]),
     .sr1Out(sr1Out),
@@ -134,16 +126,12 @@ module Project2(SW,KEY,LEDR,LEDG,HEX0,HEX1,HEX2,HEX3,CLOCK_50);
     .dOut(aluOut)
   );
   
-  Register DMEM_ADDR_reg(clk, reset, clk, aluOut, aluOut_M);
-  Register DMEM_DATA_reg(clk, reset, clk, sr2Out, sr2Out_M);
-  Register #(DMEM_DATA_BIT_WIDTH) DMEM_CONTROL_reg(clk, reset, clk, memWrite, memWrite_M);
-  
   // Create DataMemory
   DataMemory #(IMEM_INIT_FILE, DMEM_ADDR_BIT_WIDTH, DMEM_DATA_BIT_WIDTH, TRUE_DMEM_ADDR_BIT_WIDTH) dataMemory (
     .clk(clk),
-    .wrtEn(memWrite_M),
-    .addr(aluOut_M),
-    .dIn(sr2Out_M),
+    .wrtEn(memWrite),
+    .addr(aluOut),
+    .dIn(sr2Out),
     .sw(SW),
     .key(KEY),
     .ledr(ledr),
@@ -151,16 +139,13 @@ module Project2(SW,KEY,LEDR,LEDG,HEX0,HEX1,HEX2,HEX3,CLOCK_50);
     .hex(hex),
     .dOut(memDataOut)
   );
-  
-  Register #(Mux3to1_CONTROL_BIT_WIDTH) Mux3to1_CONTROL_reg(clk, reset, clk, {jal, memtoReg}, sel_M);
-  Register Mux3to1_SRC3_reg(clk, reset, clk, incrementedPC, incrementedPC_M);
 
   // Create dataMux
   Mux3to1 #(DBITS) dataMux (
-    .sel(sel_M),
+    .sel({jal, memtoReg}),
     .dInSrc1(aluOut),
     .dInSrc2(memDataOut),
-    .dInSrc3(incrementedPC_M),
+    .dInSrc3(incrementedPC),
     .dOut(dataMuxOut)
   );
   
