@@ -42,6 +42,10 @@ module Project2(SW,KEY,LEDR,LEDG,HEX0,HEX1,HEX2,HEX3,CLOCK_50);
   wire [IMEM_DATA_BIT_WIDTH - 1 : 0] instWord;
   wire [DBITS - 1 : 0] pcIn, pcOut, incrementedPC, pcAdderOut, aluOut, signExtImm, dataMuxOut, sr1Out, sr2Out, aluMuxOut, memDataOut;
   
+  wire memtoReg_m, memWrite_m, jal_m, regWrite_m;
+  wire [DBITS - 1 : 0] incrementedPC_m, aluOut_m, sr2Out_m;
+  
+  
   // Create PCMUX
   Mux3to1 #(DBITS) pcMux (
     .sel({jal, (branch & aluOut[0])}),
@@ -124,6 +128,10 @@ module Project2(SW,KEY,LEDR,LEDG,HEX0,HEX1,HEX2,HEX3,CLOCK_50);
     .op1(aluControl[7:4]),
     .op2(aluControl[3:0]),
     .dOut(aluOut)
+  );
+  
+  // Pipeline Split
+  PipelineSplit #(DBITS) pipelineSplit (
   );
   
   // Create DataMemory

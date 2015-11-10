@@ -1,7 +1,7 @@
-module PipelineSplit (clk, memtoReg, memWrite, jal, regWrite, incrementedPC, aluOut, sr2Out, memtoReg_m, memWrite_m, jal_m, regWrite_m, incrementedPC_m, aluOut_m, sr2Out_m)
+module PipelineSplit (clk, memtoReg, memWrite, jal, regWrite, incrementedPC, aluOut, sr2Out, memtoReg_m, memWrite_m, jal_m, regWrite_m, incrementedPC_m, aluOut_m, sr2Out_m);
 	parameter DBITS = 32;
 	
-	input memtoReg, memWrite, jal, regWrite;
+	input clk, memtoReg, memWrite, jal, regWrite;
 	input [DBITS - 1 : 0] incrementedPC, aluOut, sr2Out;
 	output memtoReg_m, memWrite_m, jal_m, regWrite_m;
 	output [DBITS - 1 : 0] incrementedPC_m, aluOut_m, sr2Out_m;
