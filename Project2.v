@@ -104,7 +104,7 @@ module Project2(SW,KEY,LEDR,LEDG,HEX0,HEX1,HEX2,HEX3,CLOCK_50);
   // Create Dual Ported Register File
   RegisterFile #(DBITS, REG_INDEX_BIT_WIDTH) dprf (
     .clk(clk),
-    .wrtEn(regWrite),
+    .wrtEn(regWrite_m),
     .dIn(dataMuxOut),
     .dr(instWord[31:28]),
     .sr1(memWrite | branch ? instWord[31:28] : instWord[27:24]),
@@ -132,14 +132,29 @@ module Project2(SW,KEY,LEDR,LEDG,HEX0,HEX1,HEX2,HEX3,CLOCK_50);
   
   // Pipeline Split
   PipelineSplit #(DBITS) pipelineSplit (
+    .clk(clk), 
+	 .memtoReg(memtoReg), 
+	 .memWrite(memWrite), 
+	 .jal(jal), 
+	 .regWrite(regWrite), 
+	 .incrementedPC(incrementedPC), 
+	 .aluOut(aluOut), 
+	 .sr2Out(sr2Out), 
+	 .memtoReg_m(memtoReg_m), 
+	 .memWrite_m(memWrite_m), 
+	 .jal_m(jal_m), 
+	 .regWrite_m(regWrite_m), 
+	 .incrementedPC_m(incrementedPC_m), 
+	 .aluOut_m(aluOut_m), 
+	 .sr2Out_m(sr2Out_m)
   );
   
   // Create DataMemory
   DataMemory #(IMEM_INIT_FILE, DMEM_ADDR_BIT_WIDTH, DMEM_DATA_BIT_WIDTH, TRUE_DMEM_ADDR_BIT_WIDTH) dataMemory (
     .clk(clk),
-    .wrtEn(memWrite),
-    .addr(aluOut),
-    .dIn(sr2Out),
+    .wrtEn(memWrite_m),
+    .addr(aluOut_m),
+    .dIn(sr2Out_m),
     .sw(SW),
     .key(KEY),
     .ledr(ledr),
@@ -150,10 +165,10 @@ module Project2(SW,KEY,LEDR,LEDG,HEX0,HEX1,HEX2,HEX3,CLOCK_50);
 
   // Create dataMux
   Mux3to1 #(DBITS) dataMux (
-    .sel({jal, memtoReg}),
-    .dInSrc1(aluOut),
+    .sel({jal_m, memtoReg_m}),
+    .dInSrc1(aluOut_m),
     .dInSrc2(memDataOut),
-    .dInSrc3(incrementedPC),
+    .dInSrc3(incrementedPC_m),
     .dOut(dataMuxOut)
   );
   
