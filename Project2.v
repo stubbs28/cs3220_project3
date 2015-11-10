@@ -42,6 +42,11 @@ module Project2(SW,KEY,LEDR,LEDG,HEX0,HEX1,HEX2,HEX3,CLOCK_50);
   wire [IMEM_DATA_BIT_WIDTH - 1 : 0] instWord;
   wire [DBITS - 1 : 0] pcIn, pcOut, incrementedPC, pcAdderOut, aluOut, signExtImm, dataMuxOut, sr1Out, sr2Out, aluMuxOut, memDataOut;
   
+  wire memtoReg_m, memWrite_m, jal_m, regWrite_m;
+  wire [DBITS - 1 : 0] incrementedPC_m, aluOut_m, sr2Out_m;
+  
+  {memWrite, aluOut, sr2Out, jal, memtoReg, incrementedPC, regWrite
+  
   // Create PCMUX
   Mux3to1 #(DBITS) pcMux (
     .sel({jal, (branch & aluOut[0])}),
@@ -100,7 +105,7 @@ module Project2(SW,KEY,LEDR,LEDG,HEX0,HEX1,HEX2,HEX3,CLOCK_50);
   // Create Dual Ported Register File
   RegisterFile #(DBITS, REG_INDEX_BIT_WIDTH) dprf (
     .clk(clk),
-    .wrtEn(regWrite),
+    .wrtEn(regWrite_m),
     .dIn(dataMuxOut),
     .dr(instWord[31:28]),
     .sr1(memWrite | branch ? instWord[31:28] : instWord[27:24]),
@@ -126,12 +131,31 @@ module Project2(SW,KEY,LEDR,LEDG,HEX0,HEX1,HEX2,HEX3,CLOCK_50);
     .dOut(aluOut)
   );
   
+  // PipelineSplit
+  PipelineSplit #(DBITS) pipelineSplit (
+		.clk(clk),
+		.memtoReg(memtoReg), 
+		.memWrite(memWrite), 
+		.jal(jal), 
+		.regWrite(regWrite), 
+		.incrementedPC(incrementedPC), 
+		.aluOut(aluOut), 
+		.sr2Out(sr2Out), 
+		.memtoReg_m(memToReg_m), 
+		.memWrite_m(memWrite_m), 
+		.jal_m(jal_m), 
+		.regWrite_m(regWrite_m), 
+		.incrementedPC_m(incrementedPC_m), 
+		.aluOut_m(aluOut_m), 
+		.sr2Out_m(sr2Out)
+  );
+  
   // Create DataMemory
   DataMemory #(IMEM_INIT_FILE, DMEM_ADDR_BIT_WIDTH, DMEM_DATA_BIT_WIDTH, TRUE_DMEM_ADDR_BIT_WIDTH) dataMemory (
     .clk(clk),
-    .wrtEn(memWrite),
-    .addr(aluOut),
-    .dIn(sr2Out),
+    .wrtEn(memWrite_m),
+    .addr(aluOut_m),
+    .dIn(sr2Out_m),
     .sw(SW),
     .key(KEY),
     .ledr(ledr),
@@ -142,7 +166,7 @@ module Project2(SW,KEY,LEDR,LEDG,HEX0,HEX1,HEX2,HEX3,CLOCK_50);
 
   // Create dataMux
   Mux3to1 #(DBITS) dataMux (
-    .sel({jal, memtoReg}),
+    .sel({jal_m, memtoReg_m}),
     .dInSrc1(aluOut),
     .dInSrc2(memDataOut),
     .dInSrc3(incrementedPC),
