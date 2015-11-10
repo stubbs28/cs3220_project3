@@ -52,7 +52,7 @@ module Project2(SW,KEY,LEDR,LEDG,HEX0,HEX1,HEX2,HEX3,CLOCK_50);
   // Create PCMUX
   Mux3to1 #(DBITS) pcMux (
     .sel({jal, (branch & aluOut[0])}),
-    .dInSrc1(incrementedPC_m),
+    .dInSrc1(incrementedPC),
     .dInSrc2(pcAdderOut),
     .dInSrc3(aluOut),
     .dOut(pcIn)

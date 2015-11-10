@@ -19,7 +19,6 @@ module PipelineSplit (clk, flush, memtoReg, memWrite, jal, regWrite, incremented
 		aluOut_reg <= aluOut;
 		dataFwdOut2_reg <= dataFwdOut2;
 		if (flush) begin
-			memtoReg_reg <= 1'b0;
 			memWrite_reg <= 1'b0;
 			regWrite_reg <= 1'b0;
 		end
