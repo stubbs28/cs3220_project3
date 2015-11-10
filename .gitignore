@@ -4,4 +4,4 @@ incremental_db/
 output_files/
 simulation
 *.swp
-#.bak
+*.bak
