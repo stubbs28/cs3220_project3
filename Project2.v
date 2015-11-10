@@ -35,21 +35,24 @@ module Project2(SW,KEY,LEDR,LEDG,HEX0,HEX1,HEX2,HEX3,CLOCK_50);
 
   // Wires..
   wire pcWrtEn = 1'b1;
-  wire memtoReg, memWrite, branch, jal, alusrc, regWrite;
+  wire flush, memtoReg, memWrite, branch, jal, alusrc, regWrite;
+  wire memtoReg_m, memWrite_m, jal_m, regWrite_m;	// pipelineSplit - memory
   wire [7:0] aluControl, ledg;
   wire [9:0] ledr;
   wire [15:0] hex;
   wire [IMEM_DATA_BIT_WIDTH - 1 : 0] instWord;
-  wire [DBITS - 1 : 0] pcIn, pcOut, incrementedPC, pcAdderOut, aluOut, signExtImm, dataMuxOut, sr1Out, sr2Out, aluMuxOut, memDataOut;
+  wire [DBITS - 1 : 0] pcIn, pcOut, incrementedPC, pcAdderOut, signExtImm;
+  wire [DBITS - 1 : 0] dstReg, srReg1, srReg2, srOut1, srOut2;
+  wire [DBITS - 1 : 0] dataFwdOut1, dataFwdOut2, aluMuxOut, aluOut;
+  wire [DBITS - 1 : 0] dataMuxOut, memDataOut;
+  wire [DBITS - 1 : 0] incrementedPC_m, dstReg_m, aluOut_m, dataFwdOut2_m; // pipelineSplit - memory
   
-  wire memtoReg_m, memWrite_m, jal_m, regWrite_m;
-  wire [DBITS - 1 : 0] incrementedPC_m, aluOut_m, sr2Out_m;
-  
+  assign flush = (branch & aluOut[0]) | jal;
   
   // Create PCMUX
   Mux3to1 #(DBITS) pcMux (
     .sel({jal, (branch & aluOut[0])}),
-    .dInSrc1(incrementedPC),
+    .dInSrc1(incrementedPC_m),
     .dInSrc2(pcAdderOut),
     .dInSrc3(aluOut),
     .dOut(pcIn)
@@ -87,6 +90,11 @@ module Project2(SW,KEY,LEDR,LEDG,HEX0,HEX1,HEX2,HEX3,CLOCK_50);
     .alusrc(alusrc),
     .regWrite(regWrite)
   );
+  
+  // Get register addresses
+  assign dstReg = instWord[31:28];
+  assign srReg1 = (memWrite | branch) ? instWord[31:28] : instWord[27:24];
+  assign srReg2 = (memWrite | branch) ? instWord[27:24] : instWord[23:20];
 
   // Create SignExtension
   SignExtension #(16, DBITS) signExtension (
@@ -106,24 +114,39 @@ module Project2(SW,KEY,LEDR,LEDG,HEX0,HEX1,HEX2,HEX3,CLOCK_50);
     .clk(clk),
     .wrtEn(regWrite_m),
     .dIn(dataMuxOut),
-    .dr(instWord[31:28]),
-    .sr1(memWrite | branch ? instWord[31:28] : instWord[27:24]),
-    .sr2(memWrite | branch ? instWord[27:24] : instWord[23:20]),
-    .sr1Out(sr1Out),
-    .sr2Out(sr2Out)
+    .dr(dstReg_m),
+    .sr1(srReg1),
+    .sr2(srReg2),
+    .sr1Out(srOut1),
+    .sr2Out(srOut2)
+  );
+  
+  // Create DataFwdMux1 (Between DPRF and ALU)
+  Mux2to1 #(DBITS) dataFwdMux1(
+    .sel(((srReg1 == dstReg_m) && regWrite_m) ? 1'b1 : 1'b0),
+	 .dInSrc1(srOut1),
+	 .dInSrc2(dataMuxOut),
+	 .dOut(dataFwdOut1)
+  );
+  
+  Mux2to1 #(DBITS) dataFwdMux2(
+    .sel(((srReg2 == dstReg_m) && regWrite_m) ? 1'b1 : 1'b0),
+	 .dInSrc1(srOut2),
+	 .dInSrc2(dataMuxOut),
+	 .dOut(dataFwdOut2)
   );
 
   // Create AluMux (Between DPRF and ALU)
   Mux2to1 #(DBITS) aluMux (
     .sel(alusrc),
-    .dInSrc1(sr2Out),
+    .dInSrc1(dataFwdOut2),
     .dInSrc2(signExtImm),
     .dOut(aluMuxOut)
   );
 
   // Create ALU
   ALU alu (
-    .dIn1(sr1Out),
+    .dIn1(dataFwdOut1),
     .dIn2(aluMuxOut),
     .op1(aluControl[7:4]),
     .op2(aluControl[3:0]),
@@ -132,21 +155,24 @@ module Project2(SW,KEY,LEDR,LEDG,HEX0,HEX1,HEX2,HEX3,CLOCK_50);
   
   // Pipeline Split
   PipelineSplit #(DBITS) pipelineSplit (
-    .clk(clk), 
+    .clk(clk),
+	 .flush(flush),
 	 .memtoReg(memtoReg), 
 	 .memWrite(memWrite), 
 	 .jal(jal), 
 	 .regWrite(regWrite), 
-	 .incrementedPC(incrementedPC), 
+	 .incrementedPC(incrementedPC),
+	 .dstReg(dstReg),
 	 .aluOut(aluOut), 
-	 .sr2Out(sr2Out), 
+	 .dataFwdOut2(dataFwdOut2), 
 	 .memtoReg_m(memtoReg_m), 
 	 .memWrite_m(memWrite_m), 
 	 .jal_m(jal_m), 
 	 .regWrite_m(regWrite_m), 
-	 .incrementedPC_m(incrementedPC_m), 
+	 .incrementedPC_m(incrementedPC_m),
+	 .dstReg_m(dstReg_m),
 	 .aluOut_m(aluOut_m), 
-	 .sr2Out_m(sr2Out_m)
+	 .dataFwdOut2_m(dataFwdOut2_m)
   );
   
   // Create DataMemory
@@ -154,7 +180,7 @@ module Project2(SW,KEY,LEDR,LEDG,HEX0,HEX1,HEX2,HEX3,CLOCK_50);
     .clk(clk),
     .wrtEn(memWrite_m),
     .addr(aluOut_m),
-    .dIn(sr2Out_m),
+    .dIn(dataFwdOut2_m),
     .sw(SW),
     .key(KEY),
     .ledr(ledr),
