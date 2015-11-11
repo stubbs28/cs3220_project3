@@ -25,7 +25,7 @@ AtZero:
 	sw		t0,OFSLEDR(gp)
 	addi	t0,s0,0xBAD
 	sw		t0,OFSHEX(gp)
-	;bt		t0,t0,AtZero
+	bt		t0,t0,AtZero
 	
 	; Now the actual code
 	.ORIG 0x40

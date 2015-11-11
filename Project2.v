@@ -15,10 +15,10 @@ module Project2(SW,KEY,LEDR,LEDG,HEX0,HEX1,HEX2,HEX3,CLOCK_50);
 
   parameter DBITS         				 = 32;
   parameter INST_BIT_WIDTH				 = 32;
-  parameter START_PC       			   = 32'd0;
+  parameter START_PC       			   = 32'h40;
   parameter REG_INDEX_BIT_WIDTH 	 = 4;
  
-  parameter IMEM_INIT_FILE				 = "Test2.mif";
+  parameter IMEM_INIT_FILE				 = "LightTest.mif";
   
   parameter IMEM_ADDR_BIT_WIDTH 		 = 11;
   parameter IMEM_DATA_BIT_WIDTH 		 = INST_BIT_WIDTH;

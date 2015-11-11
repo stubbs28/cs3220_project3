@@ -11,7 +11,7 @@ wire[6:0] hex0, hex1, hex2, hex3;
 
 integer i, counter;
 
-always #10 clk = ~clk;
+always #50 clk = ~clk;
 
 Project2 CPU(
     .SW     (switches),

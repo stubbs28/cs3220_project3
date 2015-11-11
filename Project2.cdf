@@ -4,7 +4,7 @@ JedecChain;
 	DefaultMfr(6E);
 
 	P ActionCode(Cfg)
-		Device PartName(EP2C20F484) Path("Z:/Users/sd/Documents/processors project 1/0000 WORKING PROCESSOR 2/CS3220 Project 1/") File("Project2.sof") MfrSpec(OpMask(1));
+		Device PartName(EP2C20F484) Path("C:/Users/Fawks/Documents/cs3220/Project3/") File("Project2.sof") MfrSpec(OpMask(1));
 
 ChainEnd;
 

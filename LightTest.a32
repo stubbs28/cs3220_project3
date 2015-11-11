@@ -1,0 +1,20 @@
+; Addresses for I/O
+.NAME IOBASE= 0xF0000000
+.NAME	OFSHEX= 0x00000000
+.NAME	OFSLEDR=0x00000004
+.NAME	OFSLEDG=0x00000008
+.NAME	OFSKEY =0x00000010
+.NAME	OFSSW  =0x00000014
+
+	.ORIG 0x40
+CAT:
+    ; Display 0xFF on LEDG
+    mvhi	gp,IOBASE
+    andi	s0,s0,0
+    addi	t0,s0,1
+    sw		t0,OFSLEDG(gp)
+; Display 0xCA7 on HEX
+    andi	s0,s0,0
+    addi	t0,s0,0x0CA7
+    sw		t0,OFSHEX(gp)
+    bt		t0,t0,CAT

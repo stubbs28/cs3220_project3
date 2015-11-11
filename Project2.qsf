@@ -535,6 +535,8 @@ set_global_assignment -name EDA_DESIGN_INSTANCE_NAME NA -section_id SingleCycleP
 set_global_assignment -name EDA_TEST_BENCH_MODULE_NAME SingleCycleProcTest -section_id SingleCycleProcTest
 set_global_assignment -name EDA_TIME_SCALE "1 ps" -section_id eda_simulation
 set_global_assignment -name EDA_TEST_BENCH_FILE SingleCycleProcTest.v -section_id SingleCycleProcTest
+set_global_assignment -name MIF_FILE LightTest.mif
+set_global_assignment -name SOURCE_FILE LightTest.a32
 set_global_assignment -name SOURCE_FILE instructions.tx
 set_global_assignment -name VERILOG_FILE SingleCycleProcTest.v
 set_global_assignment -name VERILOG_FILE PipelineSplit.v
