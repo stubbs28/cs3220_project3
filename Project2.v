@@ -47,11 +47,11 @@ module Project2(SW,KEY,LEDR,LEDG,HEX0,HEX1,HEX2,HEX3,CLOCK_50);
   wire [DBITS - 1 : 0] dataMuxOut, memDataOut;
   wire [DBITS - 1 : 0] incrementedPC_m, dstReg_m, aluOut_m, dataFwdOut2_m; // pipelineSplit - memory
   
-  assign flush = (branch & aluOut[0]) | jal;
+  assign flush = (branch & aluOut[0]) | jal_m;
   
   // Create PCMUX
   Mux3to1 #(DBITS) pcMux (
-    .sel({jal, (branch & aluOut[0])}),
+    .sel({jal_m, (branch & aluOut[0])}),
     .dInSrc1(incrementedPC),
     .dInSrc2(pcAdderOut),
     .dInSrc3(aluOut),
